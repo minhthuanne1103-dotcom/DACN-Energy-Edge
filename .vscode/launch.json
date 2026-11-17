@@ -1,0 +1,19 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "▶ Chạy hệ thống (Docker)",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run.ps1 start",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "▶ Chạy demo Python (không Docker)",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "powershell -NoProfile -ExecutionPolicy Bypass -File run-demo.ps1",
+      "cwd": "${workspaceFolder}"
+    }
+  ]
+}

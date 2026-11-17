@@ -1,0 +1,98 @@
+name: energy-edge
+
+# Hai mạng tách biệt: ot_net (thiết bị hiện trường Modbus) và it_net (MQTT/TLS, InfluxDB, Grafana).
+# Chỉ edge gateway nằm ở cả hai mạng -> Modbus không bao giờ lộ ra ngoài.
+networks:
+  ot_net: {}
+  it_net: {}
+
+volumes:
+  models: {}
+  mqtt_data: {}
+  influx_data: {}
+  grafana_data: {}
+
+x-edge: &edge
+  build: ./edge
+  image: energy-edge:latest
+  restart: unless-stopped
+  env_file: .env
+
+services:
+  certgen:                       # chạy một lần: tạo CA + chứng chỉ TLS vào thư mục ./certs
+    <<: *edge
+    restart: "no"
+    user: root
+    command: python -m app.gencerts
+    environment: { CERT_DIR: /certs }
+    volumes: ["./certs:/certs"]
+
+  mosquitto:
+    image: eclipse-mosquitto:2.0.20
+    restart: unless-stopped
+    depends_on:
+      certgen: { condition: service_completed_successfully }
+    ports: ["127.0.0.1:8883:8883"]   # chỉ cổng MQTT over TLS, không mở cổng 1883
+    volumes:
+      - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      - ./mosquitto/acl:/mosquitto/config/acl:ro
+      - ./certs:/mosquitto/certs:ro
+      - mqtt_data:/mosquitto/data
+    networks: [it_net]
+
+  modbus-sim:
+    <<: *edge
+    command: python -m app.modbus_sim
+    networks: [ot_net]
+
+  gateway:
+    <<: *edge
+    command: python -m app.gateway
+    depends_on: [mosquitto, modbus-sim]
+    environment: { CERT_DIR: /certs }
+    volumes: ["./certs:/certs:ro", "models:/models"]
+    networks: [ot_net, it_net]
+
+  influxdb:
+    image: influxdb:2.7
+    restart: unless-stopped
+    environment:
+      DOCKER_INFLUXDB_INIT_MODE: setup
+      DOCKER_INFLUXDB_INIT_USERNAME: ${INFLUX_USER}
+      DOCKER_INFLUXDB_INIT_PASSWORD: ${INFLUX_PASSWORD}
+      DOCKER_INFLUXDB_INIT_ORG: ${INFLUX_ORG}
+      DOCKER_INFLUXDB_INIT_BUCKET: ${INFLUX_BUCKET}
+      DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: ${INFLUX_TOKEN}
+      DOCKER_INFLUXDB_INIT_RETENTION: 30d
+    ports: ["127.0.0.1:8086:8086"]
+    volumes: ["influx_data:/var/lib/influxdb2"]
+    networks: [it_net]
+
+  bridge:
+    <<: *edge
+    command: python -m app.bridge
+    depends_on: [mosquitto, influxdb]
+    environment: { CERT_DIR: /certs }
+    volumes: ["./certs:/certs:ro"]
+    networks: [it_net]
+
+  grafana:
+    image: grafana/grafana:10.4.2
+    restart: unless-stopped
+    depends_on: [influxdb]
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD}
+      # Xem dashboard không cần đăng nhập (chỉ quyền xem, chỉ truy cập được từ máy này).
+      # Muốn chỉnh sửa dashboard: vào /login và đăng nhập admin.
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /etc/grafana/provisioning/dashboards/energy.json
+      INFLUX_TOKEN: ${INFLUX_TOKEN}
+      INFLUX_ORG: ${INFLUX_ORG}
+      INFLUX_BUCKET: ${INFLUX_BUCKET}
+    ports: ["127.0.0.1:3000:3000"]   # chỉ mở cho chính máy này
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - grafana_data:/var/lib/grafana
+    networks: [it_net]

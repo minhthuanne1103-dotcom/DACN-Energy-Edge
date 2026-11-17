@@ -1,0 +1,8 @@
+# Bí mật và dữ liệu sinh ra khi chạy: không đưa lên git
+.env
+certs/
+edge/models/
+.venv/
+__pycache__/
+.pytest_cache/
+*.pyc

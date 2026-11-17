@@ -1,0 +1,8 @@
+pymodbus==3.6.9
+paho-mqtt==2.1.0
+numpy==1.26.4
+scikit-learn==1.4.2
+joblib==1.4.2
+cryptography==42.0.8
+influxdb-client==1.44.0
+pytest==8.2.2

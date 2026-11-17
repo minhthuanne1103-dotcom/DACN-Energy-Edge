@@ -1,0 +1,11 @@
+# Tên người dùng = CN của chứng chỉ client.
+user gateway
+topic readwrite factory/#
+
+user bridge
+topic read factory/#
+
+user operator
+topic read factory/#
+topic write factory/+/+/relay/set
+topic write factory/+/config/#

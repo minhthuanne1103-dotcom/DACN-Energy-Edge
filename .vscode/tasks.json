@@ -1,0 +1,71 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "▶ Chạy hệ thống (Docker)",
+      "type": "shell",
+      "command": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run.ps1 start",
+      "group": { "kind": "build", "isDefault": true },
+      "presentation": { "reveal": "always", "panel": "dedicated", "focus": true },
+      "problemMatcher": []
+    },
+    {
+      "label": "■ Tắt hệ thống",
+      "type": "shell",
+      "command": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run.ps1 stop",
+      "presentation": { "reveal": "always", "panel": "dedicated" },
+      "problemMatcher": []
+    },
+    {
+      "label": "⚡ Tiêm lỗi (chọn tải và kịch bản)",
+      "type": "shell",
+      "command": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run.ps1 inject ${input:load} ${input:scenario}",
+      "presentation": { "reveal": "always", "panel": "dedicated" },
+      "problemMatcher": []
+    },
+    {
+      "label": "↺ Đóng lại relay đã ngắt (RESET)",
+      "type": "shell",
+      "command": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run.ps1 reset ${input:load}",
+      "presentation": { "reveal": "always", "panel": "dedicated" },
+      "problemMatcher": []
+    },
+    {
+      "label": "📜 Xem log gateway",
+      "type": "shell",
+      "command": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run.ps1 logs",
+      "presentation": { "reveal": "always", "panel": "dedicated" },
+      "problemMatcher": []
+    },
+    {
+      "label": "✔ Chạy kiểm thử",
+      "type": "shell",
+      "command": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run.ps1 test",
+      "presentation": { "reveal": "always", "panel": "dedicated" },
+      "problemMatcher": []
+    },
+    {
+      "label": "📊 Đánh giá AI",
+      "type": "shell",
+      "command": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/run.ps1 eval",
+      "presentation": { "reveal": "always", "panel": "dedicated" },
+      "problemMatcher": []
+    }
+  ],
+  "inputs": [
+    {
+      "id": "load",
+      "type": "pickString",
+      "description": "Chọn tải",
+      "options": ["motor", "compressor", "hvac", "lighting"],
+      "default": "motor"
+    },
+    {
+      "id": "scenario",
+      "type": "pickString",
+      "description": "Chọn kịch bản lỗi",
+      "options": ["overload", "voltage_sag", "ground_leak", "bearing_wear", "overvoltage", "normal"],
+      "default": "overload"
+    }
+  ]
+}
