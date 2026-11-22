@@ -37,5 +37,5 @@ Tổng hợp các lệnh thủ công (Dành cho việc bảo vệ & Thuyết tr�
 
 Thông tin truy cập giao diện giám sát (Dashboard):
 * Grafana Web UI: http://localhost:3000
-* Tài khoản mặc định: admin / admin
+* Không cần đăng nhập: mở link là vào thẳng dashboard (quyền Admin, chỉ truy cập được trên máy này)
 * Đường dẫn Dashboard chính: http://localhost:3000/d/industrial-energy-ai

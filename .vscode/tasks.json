@@ -1,0 +1,49 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "1 - Modbus Simulator",
+      "type": "shell",
+      "command": "${workspaceFolder}\\venv\\Scripts\\python.exe scripts/modbus_sim_server.py",
+      "isBackground": true,
+      "problemMatcher": [],
+      "presentation": { "group": "dacn", "panel": "dedicated", "reveal": "always" }
+    },
+    {
+      "label": "2 - Edge Gateway (Modbus to MQTT)",
+      "type": "shell",
+      "command": "Start-Sleep -Seconds 3; ${workspaceFolder}\\venv\\Scripts\\python.exe scripts/modbus_to_mqtt.py",
+      "isBackground": true,
+      "problemMatcher": [],
+      "presentation": { "group": "dacn", "panel": "dedicated", "reveal": "always" }
+    },
+    {
+      "label": "3 - IoT Relay Actuator",
+      "type": "shell",
+      "command": "Start-Sleep -Seconds 3; ${workspaceFolder}\\venv\\Scripts\\python.exe scripts/iot_relay_actuator.py",
+      "isBackground": true,
+      "problemMatcher": [],
+      "presentation": { "group": "dacn", "panel": "dedicated", "reveal": "always" }
+    },
+    {
+      "label": "4 - Fault Injector",
+      "type": "shell",
+      "command": "Start-Sleep -Seconds 5; ${workspaceFolder}\\venv\\Scripts\\python.exe scripts/fault_injector.py",
+      "isBackground": true,
+      "problemMatcher": [],
+      "presentation": { "group": "dacn", "panel": "dedicated", "reveal": "always" }
+    },
+    {
+      "label": "Run ALL (DACN Energy Edge)",
+      "dependsOn": [
+        "1 - Modbus Simulator",
+        "2 - Edge Gateway (Modbus to MQTT)",
+        "3 - IoT Relay Actuator",
+        "4 - Fault Injector"
+      ],
+      "dependsOrder": "parallel",
+      "problemMatcher": [],
+      "runOptions": { "runOn": "folderOpen" }
+    }
+  ]
+}
