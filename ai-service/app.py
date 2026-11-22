@@ -90,6 +90,11 @@ def on_message(client, userdata, msg):
             pg_conn.commit()
     except Exception as e:
         logging.error(f"Loi AI Engine: {e}")
+        # Huy giao dich loi de cac lan ghi PostgreSQL sau khong bi chan
+        try:
+            pg_conn.rollback()
+        except Exception:
+            pass
 
 def main():
     mqtt_client = mqtt.Client(client_id="Docker_Edge_AI_Engine")

@@ -1,4 +1,4 @@
-﻿import urllib.request, json, base64
+﻿import urllib.request, urllib.error, json, base64, time
 
 GRAFANA_URL = "http://localhost:3000"
 AUTH = base64.b64encode(b"admin:admin").decode("utf-8")
@@ -28,8 +28,34 @@ influx_payload = {
     },
     "secureJsonData": {"token": "my-super-secret-edge-token"}
 }
+postgres_payload = {
+    "uid": "edge_postgres_uid",
+    "name": "PostgreSQL_Edge",
+    "type": "grafana-postgresql-datasource",
+    "access": "proxy",
+    "url": "postgres:5432",
+    "user": "edge_admin",
+    "jsonData": {
+        "database": "energy_management",
+        "sslmode": "disable",
+        "postgresVersion": 1500
+    },
+    "secureJsonData": {"password": "edge_password123"}
+}
+
+# Doi Grafana khoi dong xong (toi da ~60 giay)
+for attempt in range(30):
+    try:
+        with urllib.request.urlopen(f"{GRAFANA_URL}/api/health", timeout=3):
+            break
+    except Exception:
+        print(f"Dang doi Grafana khoi dong... ({attempt + 1}/30)")
+        time.sleep(2)
+
 api_call("/api/datasources/uid/edge_influxdb_uid", "DELETE")
 api_call("/api/datasources", "POST", influx_payload)
+api_call("/api/datasources/uid/edge_postgres_uid", "DELETE")
+api_call("/api/datasources", "POST", postgres_payload)
 
 dashboard_payload = {
     "dashboard": {
@@ -65,16 +91,33 @@ dashboard_payload = {
                 "title": "Nhat ky Phat hien Bat thuong AI & Trang thai Ngat IoT Relay (PostgreSQL)",
                 "type": "table",
                 "gridPos": {"h": 10, "w": 24, "x": 0, "y": 9},
-                "datasource": {"type": "postgres", "uid": "edge_postgres_uid"},
+                "datasource": {"type": "grafana-postgresql-datasource", "uid": "edge_postgres_uid"},
                 "targets": [{
                     "refId": "A",
-                    "rawSql": "SELECT detected_at AS \"Thoi gian\", device_id AS \"Thiet bi\", voltage AS \"Dien ap (V)\", current AS \"Dong dien (A)\", power_w AS \"Cong suat (W)\", power_factor AS \"PF\", anomaly_score AS \"Diem AI\", action_taken AS \"Hanh dong IoT Relay\" FROM anomaly_logs ORDER BY detected_at DESC LIMIT 20;",
+                    "rawSql": "SELECT detected_at AS \"Thoi gian\", device_id AS \"Thiet bi\", voltage AS \"Dien ap (V)\", current AS \"Dong dien (A)\", power_w AS \"Cong suat (W)\", power_factor AS \"PF\", risk_label_vi AS \"Muc do\", anomaly_score AS \"Diem AI\", action_taken AS \"Hanh dong IoT Relay\" FROM v_anomaly_assessed ORDER BY detected_at DESC LIMIT 20;",
                     "format": "table"
-                }]
+                }],
+                "fieldConfig": {
+                    "defaults": {},
+                    "overrides": [{
+                        "matcher": {"id": "byName", "options": "Muc do"},
+                        "properties": [
+                            {"id": "custom.cellOptions", "value": {"type": "color-background"}},
+                            {"id": "mappings", "value": [{
+                                "type": "value",
+                                "options": {
+                                    "An toan": {"color": "green", "index": 0},
+                                    "Can kiem tra lai": {"color": "orange", "index": 1},
+                                    "Nguy hiem": {"color": "red", "index": 2}
+                                }
+                            }]}
+                        ]
+                    }]
+                }
             }
         ]
     },
     "overwrite": True
 }
 api_call("/api/dashboards/db", "POST", dashboard_payload)
-print("[OK] Da cap nhat xong 2 bieu do InfluxDB!")
+print("[OK] Da cap nhat xong datasource InfluxDB, PostgreSQL va dashboard!")

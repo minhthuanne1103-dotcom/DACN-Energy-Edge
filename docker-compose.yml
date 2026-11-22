@@ -67,13 +67,18 @@
     image: grafana/grafana:latest
     container_name: edge_grafana
     ports:
-      - "3000:3000"
+      # Chi mo tren may local vi Grafana khong yeu cau dang nhap
+      - "127.0.0.1:3000:3000"
     depends_on:
       - influxdb
       - postgres
     environment:
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=admin
+      # Bo qua man hinh dang nhap: vao thang dashboard voi quyen Admin
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+      - GF_AUTH_DISABLE_LOGIN_FORM=true
     volumes:
       - grafana_data:/var/lib/grafana
     restart: always
