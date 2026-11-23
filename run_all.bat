@@ -6,9 +6,21 @@ echo =====================================================================
 echo   KHOI DONG HA TANG GIAM SAT NANG LUONG VA AI LOCAL ANOMALY DETECTION
 echo =====================================================================
 
+docker info >nul 2>&1
+if errorlevel 1 (
+    echo [LOI] Docker Desktop chua chay. Hay mo Docker Desktop, doi no san sang roi chay lai.
+    pause
+    exit /b 1
+)
+
 if not exist "venv\Scripts\python.exe" (
     echo [1/6] Dang tao moi truong ao Python cho may moi...
-    python -m venv venv
+    py -3.12 -m venv venv 2>nul || py -3.11 -m venv venv 2>nul || python -m venv venv
+    if not exist "venv\Scripts\python.exe" (
+        echo [LOI] Khong tao duoc venv. Hay cai Python 3.11 hoac 3.12 ^(tich "Add to PATH"^).
+        pause
+        exit /b 1
+    )
     echo [1/6] Dang cai dat cac thu vien Python...
     call "venv\Scripts\pip.exe" install -r requirements.txt
 ) else (

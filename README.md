@@ -1,7 +1,7 @@
 Các phần mềm và môi trường cần cài đặt sẵn (Prerequisites):
 Trước khi chạy đồ án trên máy tính mới, hãy đảm bảo máy đã cài đặt các công cụ sau:
 * 1. Docker Desktop: Đã cài và đang ở trạng thái chạy (Engine running) hỗ trợ WSL 2.
-* 2. Python 3.11+: Dùng để chạy các tiến trình giả lập Modbus, Edge Gateway và AI Engine.
+* 2. Python 3.11 hoặc 3.12 (KHÔNG dùng 3.13/3.14 vì thư viện chưa hỗ trợ đủ; khi cài nhớ tích "Add python.exe to PATH"): Dùng để chạy các tiến trình giả lập Modbus, Edge Gateway và AI Engine.
 * 3. Git: Dùng để quản lý mã nguồn.
 * 4. VS Code (Khuyên dùng): Dùng làm trình soạn thảo mã nguồn.
 
@@ -10,8 +10,8 @@ Trước khi chạy đồ án trên máy tính mới, hãy đảm bảo máy đ�
 Hướng dẫn cài đặt và khởi động nhanh (Quick Start):
 * Bước 1: Clone mã nguồn từ GitHub về máy
   Mở Terminal (PowerShell hoặc CMD) và chạy:
-  `git clone <URL_REPOSITORY_GITHUB_CUA_BAN>`
-  `cd <TEN_THU_MUC_DO_AN>`
+  `git clone https://github.com/minhthuanne1103-dotcom/DACN-Energy-Edge.git`
+  `cd DACN-Energy-Edge`
 * Bước 2: Khởi động toàn bộ hệ thống
   Cách nhanh nhất (Tự động 100%): Nhấp đúp chuột trực tiếp vào file **run_all.bat** nằm ngay trong thư mục gốc của dự án.
 

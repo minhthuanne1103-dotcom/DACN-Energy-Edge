@@ -1,8 +1,9 @@
 ﻿pymodbus==3.6.8
 paho-mqtt==1.6.1
-influxdb-client
-pg8000
-pandas
-scikit-learn
-cryptography
-joblib
+influxdb-client==1.46.0
+pg8000==1.31.2
+pandas==2.2.3
+numpy==1.26.4
+scikit-learn==1.5.2
+cryptography==43.0.3
+joblib==1.4.2

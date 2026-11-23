@@ -38,7 +38,25 @@ def get_pg_conn():
             time.sleep(3)
 
 pg_conn = get_pg_conn()
-pg_cursor = pg_conn.cursor()
+
+def log_anomaly(device_id, v, i, p_w, pf, score, action):
+    """Ghi nhat ky bat thuong vao PostgreSQL, tu ket noi lai neu bi mat ket noi."""
+    global pg_conn
+    sql = ("INSERT INTO anomaly_logs (device_id, voltage, current, power_w, power_factor, anomaly_score, action_taken) "
+           "VALUES (%s, %s, %s, %s, %s, %s, %s)")
+    for attempt in range(2):
+        try:
+            cur = pg_conn.cursor()
+            cur.execute(sql, (device_id, v, i, p_w, pf, score, action))
+            pg_conn.commit()
+            return
+        except Exception as e:
+            logging.warning(f"Loi ghi PostgreSQL ({e}), thu ket noi lai...")
+            try:
+                pg_conn.close()
+            except Exception:
+                pass
+            pg_conn = get_pg_conn()
 
 def on_message(client, userdata, msg):
     global prev_current, consecutive_anomalies
@@ -83,24 +101,25 @@ def on_message(client, userdata, msg):
         write_api.write(bucket=INFLUX_BUCKET, org=INFLUX_ORG, record=point)
 
         if is_anomaly == 1:
-            pg_cursor.execute(
-                "INSERT INTO anomaly_logs (device_id, voltage, current, power_w, power_factor, anomaly_score, action_taken) VALUES (%s, %s, %s, %s, %s, %s, %s)",
-                (data["device_id"], v, i, p_w, pf, round(raw_score, 4), action_taken)
-            )
-            pg_conn.commit()
+            log_anomaly(data["device_id"], v, i, p_w, pf, round(raw_score, 4), action_taken)
     except Exception as e:
         logging.error(f"Loi AI Engine: {e}")
-        # Huy giao dich loi de cac lan ghi PostgreSQL sau khong bi chan
-        try:
-            pg_conn.rollback()
-        except Exception:
-            pass
 
 def main():
     mqtt_client = mqtt.Client(client_id="Docker_Edge_AI_Engine")
     mqtt_client.tls_set(ca_certs="/app/certs/ca.crt", cert_reqs=ssl.CERT_REQUIRED, tls_version=ssl.PROTOCOL_TLSv1_2)
     mqtt_client.tls_insecure_set(True)
     mqtt_client.on_message = on_message
+
+    def on_connect(client, userdata, flags, rc):
+        # Dang ky lai topic moi lan (re)connect de khong mat subscription khi broker khoi dong lai
+        if rc == 0:
+            client.subscribe("factory/zone1/+/telemetry", qos=1)
+            logging.info("AI Edge Container da san sang phan tich thoi gian thuc!")
+        else:
+            logging.error(f"Ket noi MQTT that bai (rc={rc})")
+    mqtt_client.on_connect = on_connect
+
     while True:
         try:
             mqtt_client.connect(MQTT_BROKER, MQTT_PORT, 60)
@@ -108,8 +127,6 @@ def main():
         except Exception as e:
             logging.warning(f"Doi MQTT Broker... ({e})")
             time.sleep(3)
-    mqtt_client.subscribe("factory/zone1/+/telemetry", qos=1)
-    logging.info("AI Edge Container da san sang phan tich thoi gian thuc!")
     mqtt_client.loop_forever()
 
 if __name__ == "__main__":
